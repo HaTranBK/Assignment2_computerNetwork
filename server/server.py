@@ -138,30 +138,27 @@ def client_handler(conn, addr):
     #     log_event(f"Connection with {addr} closed.")
 
 # Request file list from a specific client
-def request_file_list_from_client(hostname):
-    if hostname in active_connections:
-        conn = active_connections[hostname]
-        ip_address, _ = conn.getpeername()  # Get the IP address of the peer socket
-        print(ip_address)
-        peer_port = 65433  # The port where the peer service is expected to be running
+def request_file_list_from_client(peer_ip,peer_port):
+    try:
         peer_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        peer_sock.connect((ip_address, peer_port))
+        peer_sock.connect((peer_ip, int(peer_port)))
         request = {'action': 'request_file_list'}
         peer_sock.sendall(json.dumps(request).encode() + b'\n')
         response = json.loads(peer_sock.recv(4096).decode())
         print(response)
         peer_sock.close()
-        if 'files' in response:
-            return response['files']
+        if "file_list" in response:
+            return response['file_list']
         else:
             return "Error: No file list in response"
-    else:
+    except Exception as e:
+        print(f"Error in request_file_List_from_client: {e}")
         return "Error: Client not connected"
 
 # Discover files by hostname
-def discover_files(peers_hostname):
-    files = request_file_list_from_client(peers_hostname)
-    print(f"Files on {peers_hostname}: {files}")
+def discover_files(peer_ip,peer_port):
+    files = request_file_list_from_client(peer_ip,peer_port)
+    print(f"Files on {peer_ip}:{peer_port}: {files}")
 
 # Check if host is online by pinging
 def ping_host(peers_hostname):
@@ -183,7 +180,14 @@ def server_command_shell():
         if cmd_parts:
             action = cmd_parts[0]
             if action == "discover" and len(cmd_parts) == 2:
-                threading.Thread(target=discover_files, args=(cmd_parts[1],)).start()
+                peer_ip,peer_port=cmd_parts[1].split(":")
+                cur.execute("SELECT status FROM peerstatus WHERE peer_ip=%s AND peer_port=%s ",((peer_ip),(peer_port)))
+                result=cur.fetchone()
+                print(f"result in request_file_list_from_client {result[0]}")
+                if result[0] == "ONLINE":
+                    threading.Thread(target=discover_files, args=(peer_ip,peer_port)).start()
+                else:
+                    print(f"Device with {peer_ip}:{peer_port} is {result[0]}")
             elif action == "ping" and len(cmd_parts) == 2:
                 ping_host(cmd_parts[1])
             elif action == "exit":

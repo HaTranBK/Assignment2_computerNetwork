@@ -268,7 +268,7 @@ def handle_file_request(conn, shared_files_dir):
             send_piece_to_client(conn, file_path)
         elif command['action']=='request_file_list':
             file_list=get_list_local_files()
-            conn.sendall(file_list.encode("utf-8"))
+            conn.sendall(json.dumps({"file_list":file_list}).encode("utf-8"))
     except Exception as e:
         print("error in handle_file_request: ",e)
     finally:
