@@ -20,7 +20,7 @@ def log_event(message):
 def update_client_info(peers_ip, peers_port, peers_hostname, file_name, file_size, piece_hash, piece_size, num_order_in_file):
     try:
         for i in range(len(num_order_in_file)):
-            print("i: ",i)
+           
             # Check if piece hash already exists
             # piece_hash_value = piece_hash[i] if isinstance(piece_hash[i], bytes) else bytes.fromhex(piece_hash[i])
             cur.execute(
@@ -74,7 +74,7 @@ def client_handler(conn, addr):
                 log_event(f"Connected to {client_peers_hostname}/{peers_ip}:{peers_port}")
 
             elif action == 'publish':
-                print("bạn đang bên trong publish")
+              
                 log_event(f"Updating file info in database for {client_peers_hostname}")
 
                 piece_size=command['file_size'] if int(command['file_size']) < int(command['piece_size']) else command['piece_size']
@@ -101,7 +101,7 @@ def client_handler(conn, addr):
                 print("result of fetch file: ",results)
                 if results:
                     # mảng các object
-                    print("bạn vào if rồi, yên tâm, có thể sai ở chỗ peer_infor ở dưới do dữ liệu lấy từ db là bytea đó")
+                    # print("bạn vào if rồi, yên tâm, có thể sai ở chỗ peer_infor ở dưới do dữ liệu lấy từ db là bytea đó")
                     peers_info = [{'peers_ip': r[1], 'peers_port': r[2], 'peers_hostname': r[3],
                                    'file_name': r[4], 'file_size': r[5], 'piece_hash': r[6],
                                    'piece_size': r[7], 'num_order_in_file': r[8]} for r in results]
